@@ -1,0 +1,405 @@
+{
+	"info": {
+		"_postman_id": "3bb2f26a-4c3a-4d72-919d-5adc330d2c7a",
+		"name": "account-service-quarkus",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19442902"
+	},
+	"item": [
+		{
+			"name": "buscar-cuenta-id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/accounts/<account_id>",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts",
+						"<account_id>"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "buscar-cuenta-id-cliente",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/accounts?customerId=<customer_id>",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					],
+					"query": [
+						{
+							"key": "customerId",
+							"value": "<customer_id>"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "eliminar-cuenta-inactivo",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/accounts/<account_id>",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts",
+						"<account_id>"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "crear-cuenta-pasivo-cuenta de ahorro",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"SAVINGS_ACCOUNT\",\n  \"balance\": 50.00\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "crear-cuenta-pasivo-cuenta corriente",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 100.50\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "crear-cuenta-pasivo-cuenta plazo fijo",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"FIXED_TERM_DEPOSIT\",\n  \"balance\": 500.00,\n  \"specificDepositDate\": \"2026-03-15T10:00:00Z\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "crear-cuenta-corriente-empresarial",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 1000.00,\n  \"holders\": [\"Juan Pérez\"],\n  \"signatories\": [\"Ana Gómez\", \"Luis Torres\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "badrequest-rear-cuenta-ahorro-empresarial",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"SAVINGS_ACCOUNT\",\n  \"balance\": 500.00\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "badrequest-crear-cuenta-empresarial-sin-titulares",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 500.00,\n  \"holders\": [],\n  \"signatories\": [\"Pedro\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear un crédito para un cliente personal (único)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"PERSONAL\",\n  \"balance\": 5000.00\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear múltiples créditos para un cliente empresarial",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"BUSINESS\",\n  \"balance\": 10000.00\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Tarjeta de Crédito para Cliente Personal",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c26ded0eda43227fd7b4\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 2500.00\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Tarjeta de Crédito para Cliente Empresarial",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customerId\": \"68c3c244ed0eda43227fd7b2\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 0\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/accounts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
