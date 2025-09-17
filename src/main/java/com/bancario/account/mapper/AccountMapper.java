@@ -16,14 +16,17 @@ public interface AccountMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "holders", source = "holders")
     @Mapping(target = "signatories", source = "signatories")
-    @Mapping(target = "creditType", source = "creditType") // <-- Mapeo añadido
+    @Mapping(target = "creditType", source = "creditType")
     @Mapping(target = "monthlyMovements", ignore = true)
+    @Mapping(target = "amountUsed", source = "amountUsed") // Nuevo mapeo para amountUsed
     Account toEntity(AccountRequest request);
 
+    @Mapping(target = "id", source = "id", qualifiedByName = "mapObjectIdToString")
     @Mapping(target = "holders", source = "holders")
     @Mapping(target = "signatories", source = "signatories")
-    @Mapping(target = "creditType", source = "creditType") // <-- Mapeo añadido
+    @Mapping(target = "creditType", source = "creditType")
     @Mapping(target = "monthlyMovements", ignore = true)
+    @Mapping(target = "amountUsed", source = "amountUsed") // Nuevo mapeo para amountUsed
     AccountResponse toResponse(Account account);
 
     default String mapObjectIdToString(ObjectId objectId) {

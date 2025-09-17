@@ -13,6 +13,7 @@ public record AccountResponse(
         AccountType accountType,
         CreditType creditType,
         BigDecimal balance,
+        BigDecimal amountUsed,
         LocalDateTime openingDate,
         Integer monthlyMovements,
         LocalDateTime specificDepositDate,

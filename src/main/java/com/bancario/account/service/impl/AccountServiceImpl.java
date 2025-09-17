@@ -77,12 +77,7 @@ public class AccountServiceImpl implements AccountService {
 
         return accountRepository.findById(toObjectId(accountId))
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Account not found with ID: " + accountId))
-                .onItem().invoke(account -> {
-                    if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
-                        throw new IllegalArgumentException("Cannot eliminate account with non-zero balance.");
-                    }
-                    account.setStatus(AccountStatus.INACTIVE);
-                })
+                .onItem().invoke(this::validateAccountStatusChange)
                 .onItem().transformToUni(account -> accountRepository.update(account))
                 .onItem().ignore().andContinueWithNull();
     }
@@ -175,5 +170,20 @@ public class AccountServiceImpl implements AccountService {
     // Método para convertir String a ObjectId
     private ObjectId toObjectId(String id) {
         return new ObjectId(id);
+    }
+
+    private void validateAccountStatusChange(Account account) {
+        if (account.getProductType() == ProductType.PASSIVE) {
+            // Regla para cuentas pasivas (ahorro, corriente): el saldo debe ser cero.
+            if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+                throw new IllegalArgumentException("Cannot eliminate a passive account with a non-zero balance.");
+            }
+        } else if (account.getProductType() == ProductType.ACTIVE) {
+            // Regla para cuentas activas (créditos): el monto consumido debe ser igual al balance.
+            // Si no son iguales, la cuenta no se puede inactivar.
+            if (account.getAmountUsed() == null || account.getAmountUsed().compareTo(account.getBalance()) != 0) {
+                throw new IllegalArgumentException("Cannot eliminate an active account. The amount used must be equal to the total balance.");
+            }
+        }
     }
 }

@@ -12,7 +12,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8081/accounts/<account_id>",
+					"raw": "http://localhost:8081/accounts/68c974ccbd8e65cd317d6623",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -20,7 +20,7 @@
 					"port": "8081",
 					"path": [
 						"accounts",
-						"<account_id>"
+						"68c974ccbd8e65cd317d6623"
 					]
 				}
 			},
@@ -182,7 +182,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 1000.00,\n  \"holders\": [\"Juan Pérez\"],\n  \"signatories\": [\"Ana Gómez\", \"Luis Torres\"]\n}",
+					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 1000.00,\n  \"amountUsed\": 1000,\n  \"holders\": [\"Juan Pérez\"],\n  \"signatories\": [\"Ana Gómez\", \"Luis Torres\"]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -248,7 +248,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 500.00,\n  \"holders\": [],\n  \"signatories\": [\"Pedro\"]\n}",
+					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 500.00,\n  \"amountUsed\": 500.00,\n  \"holders\": [],\n  \"signatories\": [\"Pedro\"]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -281,7 +281,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"PERSONAL\",\n  \"balance\": 5000.00\n}",
+					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"PERSONAL\",\n  \"balance\": 5000.00,\n  \"amountUsed\": 5000.00\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -314,7 +314,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"BUSINESS\",\n  \"balance\": 10000.00\n}",
+					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"BUSINESS\",\n  \"balance\": 10000.00,\n  \"amountUsed\": 10000.00\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -347,7 +347,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c26ded0eda43227fd7b4\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 2500.00\n}",
+					"raw": "{\n  \"customerId\": \"68c3c26ded0eda43227fd7b4\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 2500.00,\n  \"amountUsed\": 2500.00\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -380,7 +380,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c244ed0eda43227fd7b2\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 0\n}",
+					"raw": "{\n  \"customerId\": \"68c3c244ed0eda43227fd7b2\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 50000,\n  \"amountUsed\": 50000\n}",
 					"options": {
 						"raw": {
 							"language": "json"

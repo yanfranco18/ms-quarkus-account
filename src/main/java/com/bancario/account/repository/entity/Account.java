@@ -19,7 +19,8 @@ public class Account {
     public ProductType productType; // Nuevo: Para diferenciar Pasivo/Activo
     public AccountType accountType; // Opcional: Solo para productos pasivos
     public CreditType creditType;   // Opcional: Solo para productos activos
-    public BigDecimal balance;
+    public BigDecimal balance; // Este será el límite de crédito
+    public BigDecimal amountUsed; // Nuevo: este rastreará la cantidad utilizada
     public LocalDateTime openingDate;
     public Integer monthlyMovements; // Opcional: Para cuentas de ahorro
     public LocalDateTime specificDepositDate; // Opcional: Para plazo fijo

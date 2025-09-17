@@ -20,6 +20,9 @@ public record AccountRequest(
         @NotNull(message = "El balance no puede ser nulo")
         @PositiveOrZero(message = "El balance inicial no puede ser negativo")
         BigDecimal balance,
+        @NotNull(message = "El amountUsed no puede ser nulo")
+        @PositiveOrZero(message = "El amountUsed inicial no puede ser negativo")
+        BigDecimal amountUsed,
         LocalDateTime specificDepositDate,
 
         // Campos corregidos para titulares y firmantes
