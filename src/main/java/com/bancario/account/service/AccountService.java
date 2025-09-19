@@ -38,4 +38,13 @@ public interface AccountService {
      * @return Un objeto Multi que emite las cuentas del cliente.
      */
     Multi<AccountResponse> findByCustomerId(String customerId);
+
+    /**
+     * Updates the balance of an account.
+     *
+     * @param accountId The ID of the account to be updated.
+     * @param updatedAccount The account data transfer object (DTO) containing the new balance.
+     * @return A Uni that emits the updated account.
+     */
+    Uni<AccountResponse> updateAccountBalance(String accountId, AccountResponse updatedAccount);
 }

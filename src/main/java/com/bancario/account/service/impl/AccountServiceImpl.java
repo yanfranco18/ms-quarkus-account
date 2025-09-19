@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.bson.types.ObjectId;
 
@@ -89,6 +90,20 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.find("customerId", customerId)
                 .stream()
                 .onItem().transform(account -> accountMapper.toResponse(account));
+    }
+
+    @Override
+    public Uni<AccountResponse> updateAccountBalance(String accountId, AccountResponse updatedAccount) {
+        return accountRepository.findById(new ObjectId(accountId))
+                .onItem().ifNull().failWith(() -> new NoSuchElementException("Account with ID " + accountId + " not found."))
+                .onItem().transformToUni(account -> {
+                    // Actualiza el balance o el amountUsed
+                    account.setBalance(updatedAccount.balance());
+                    account.setAmountUsed(updatedAccount.amountUsed());
+
+                    return accountRepository.update(account)
+                            .onItem().transform(accountMapper::toResponse);
+                });
     }
 
     // Método para la validación de cuentas activas (créditos)
@@ -179,10 +194,9 @@ public class AccountServiceImpl implements AccountService {
                 throw new IllegalArgumentException("Cannot eliminate a passive account with a non-zero balance.");
             }
         } else if (account.getProductType() == ProductType.ACTIVE) {
-            // Regla para cuentas activas (créditos): el monto consumido debe ser igual al balance.
-            // Si no son iguales, la cuenta no se puede inactivar.
-            if (account.getAmountUsed() == null || account.getAmountUsed().compareTo(account.getBalance()) != 0) {
-                throw new IllegalArgumentException("Cannot eliminate an active account. The amount used must be equal to the total balance.");
+            // Regla para cuentas activas (créditos): el monto consumido debe ser cero.
+            if (account.getAmountUsed().compareTo(BigDecimal.ZERO) != 0) {
+                throw new IllegalArgumentException("Cannot eliminate an active account with a non-zero amount used.");
             }
         }
     }
