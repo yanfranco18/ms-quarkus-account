@@ -18,6 +18,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import java.net.URI;
+import java.util.NoSuchElementException;
 
 @Path("/accounts")
 @Produces(MediaType.APPLICATION_JSON)
@@ -70,5 +71,28 @@ public class AccountResource {
     public Uni<Response> deleteAccount(@PathParam("accountId") String accountId) {
         return accountService.eliminarCuenta(accountId)
                 .onItem().transform(ignored -> Response.noContent().build());
+    }
+
+    @PUT
+    @Path("/{accountId}/update-balance")
+    @Operation(summary = "Updates the balance of an account.")
+    @APIResponse(
+            responseCode = "200",
+            description = "Account balance updated successfully.",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountResponse.class))
+    )
+    @APIResponse(responseCode = "400", description = "Invalid account ID or request body.")
+    @APIResponse(responseCode = "404", description = "Account not found.")
+    public Uni<Response> updateAccountBalance(@PathParam("accountId") String accountId, AccountResponse request) {
+        return accountService.updateAccountBalance(accountId, request)
+                .onItem().transform(account -> Response.ok(account).build())
+                .onFailure().recoverWithItem(e -> {
+                    if (e instanceof IllegalArgumentException) {
+                        return Response.status(Response.Status.BAD_REQUEST).build();
+                    } else if (e instanceof NoSuchElementException) {
+                        return Response.status(Response.Status.NOT_FOUND).build();
+                    }
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+                });
     }
 }
