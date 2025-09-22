@@ -6,6 +6,7 @@ import com.bancario.account.repository.entity.Account;
 import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named; // Asegúrate de importar esta anotación
 
 @Mapper(componentModel = "cdi")
 public interface AccountMapper {
@@ -18,7 +19,7 @@ public interface AccountMapper {
     @Mapping(target = "signatories", source = "signatories")
     @Mapping(target = "creditType", source = "creditType")
     @Mapping(target = "monthlyMovements", ignore = true)
-    @Mapping(target = "amountUsed", source = "amountUsed") // Nuevo mapeo para amountUsed
+    @Mapping(target = "amountUsed", source = "amountUsed")
     Account toEntity(AccountRequest request);
 
     @Mapping(target = "id", source = "id", qualifiedByName = "mapObjectIdToString")
@@ -26,9 +27,11 @@ public interface AccountMapper {
     @Mapping(target = "signatories", source = "signatories")
     @Mapping(target = "creditType", source = "creditType")
     @Mapping(target = "monthlyMovements", ignore = true)
-    @Mapping(target = "amountUsed", source = "amountUsed") // Nuevo mapeo para amountUsed
+    @Mapping(target = "amountUsed", source = "amountUsed")
     AccountResponse toResponse(Account account);
 
+    // Método corregido con la anotación @Named
+    @Named("mapObjectIdToString")
     default String mapObjectIdToString(ObjectId objectId) {
         return objectId != null ? objectId.toHexString() : null;
     }
