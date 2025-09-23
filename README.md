@@ -74,6 +74,7 @@ docker run -i --rm -p 8081:8081 quarkus/account-service
 - `POST /accounts` — Crear cuenta bancaria o de crédito
 - `GET /accounts/{accountId}` — Consultar cuenta por ID
 - `GET /accounts?customerId=...` — Listar cuentas por cliente
+- `PUT /accounts/{accountId}/update-balance` — Actualizar el balance de una cuenta
 - `DELETE /accounts/{accountId}` — Eliminar (inactivar) cuenta
 
 Consulta la documentación interactiva en:  
