@@ -101,8 +101,11 @@ public class AccountServiceImpl implements AccountService {
                     account.setBalance(updatedAccount.balance());
                     account.setAmountUsed(updatedAccount.amountUsed());
 
-                    return accountRepository.update(account)
-                            .onItem().transform(accountMapper::toResponse);
+                    return accountRepository.persistOrUpdate(account)
+                            .chain(() -> {
+                                // 2. Después de la persistencia exitosa, transformar la entidad a una respuesta.
+                                return Uni.createFrom().item(accountMapper.toResponse(account));
+                            });
                 });
     }
 
