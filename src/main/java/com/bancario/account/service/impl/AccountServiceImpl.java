@@ -58,9 +58,7 @@ public class AccountServiceImpl implements AccountService {
             // Si no es un tipo de producto válido, lanza una excepción o devuelve un Uni vacío.
             return Uni.createFrom().failure(new IllegalArgumentException("Invalid product type."));
         }
-
-        // 3. Encadena la creación de la cuenta solo si las validaciones asíncronas se completan.
-        return validationUni.chain(() -> createAccount(request));
+        return validationUni.chain(() -> assignSpecialAttributesAndPersist(request));
     }
 
     @Override
@@ -114,8 +112,7 @@ public class AccountServiceImpl implements AccountService {
         return customerServiceRestClient.getCustomerById(request.customerId())
                 .onItem().transformToUni(customerResponse -> {
                     if (customerResponse.type() == CustomerType.PERSONAL) {
-                        return accountRepository.find("customerId = ?1 and productType = ?2", request.customerId(), ProductType.ACTIVE)
-                                .count()
+                        return accountRepository.countActiveProducts(request.customerId())
                                 .onItem().transformToUni(count -> {
                                     if (count >= 1) {
                                         return Uni.createFrom().failure(new IllegalArgumentException("A personal customer cannot have more than one active credit."));
@@ -130,9 +127,22 @@ public class AccountServiceImpl implements AccountService {
     private Uni<Void> validatePassiveAccountCreation(AccountRequest request) {
         return customerServiceRestClient.getCustomerById(request.customerId())
                 .onItem().transformToUni(customerResponse -> {
+
+                    CustomerType customerType = customerResponse.type();
+
+                    // --- VALIDACIÓN DE PERFILES ESPECIALES (VIP / PYME) ---
+                    if (customerType == CustomerType.VIP) {
+                        // El VIP es un tipo de cliente PERSONAL.
+                        return validateVipEligibility(request);
+                    }
+
+                    if (customerType == CustomerType.PYME) {
+                        // El PYME es un tipo de cliente EMPRESARIAL.
+                        return validatePymeEligibility(request);
+                    }
+
                     if (customerResponse.type() == CustomerType.PERSONAL) {
-                        return accountRepository.find("customerId = ?1 and accountType = ?2", request.customerId(), request.accountType())
-                                .count()
+                        return accountRepository.countAccountsByType(request.customerId(), request.accountType())
                                 .onItem().transformToUni(count -> {
                                     if (count >= 1) {
                                         return Uni.createFrom().failure(new IllegalArgumentException("A personal customer can only have one " + request.accountType() + " account."));
@@ -155,31 +165,27 @@ public class AccountServiceImpl implements AccountService {
                 });
     }
 
-    // Método que contiene la lógica de persistencia y mapeo de la cuenta
-    private Uni<AccountResponse> createAccount(AccountRequest request) {
-        Account account = accountMapper.toEntity(request);
-        account.setAccountNumber(UUID.randomUUID().toString());
-        account.setOpeningDate(LocalDateTime.now());
-        account.setStatus(AccountStatus.ACTIVE);
-        return accountRepository.persist(account)
-                .onItem().invoke(persistedAccount -> log.info("Account with ID {} created successfully", persistedAccount.id))
-                .onItem().transform(persistedAccount -> accountMapper.toResponse(persistedAccount));
-    }
-
     // Método para validaciones síncronas de la solicitud
     private void validateSynchronousAccountCreation(AccountRequest request) {
-        if (request.balance() == null || request.balance().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Initial balance cannot be null or negative.");
-        }
 
-        if (request.productType() == ProductType.PASSIVE) {
-            if (request.accountType() == AccountType.CURRENT_ACCOUNT) {
-                if (request.balance().compareTo(BigDecimal.ZERO) == 0) {
-                    throw new IllegalArgumentException("Current accounts require a non-zero initial balance.");
-                }
-            } else if (request.accountType() == AccountType.FIXED_TERM_DEPOSIT) {
-                if (request.specificDepositDate() == null) {
-                    throw new IllegalArgumentException("Fixed-term deposits require a specific deposit date.");
+        if (request.balance() == null) {
+            throw new IllegalArgumentException("Initial balance cannot be null.");
+        }
+        // 2. VALIDACIÓN DE REGLAS DE CUENTAS BANCARIAS PASIVAS
+        // Aplicamos la regla de "balance >= $0" solo a los tipos de cuenta requeridos.
+        if (isBankTypeAccount(request.accountType())) {
+
+            // **REQUERIMIENTO IMPLEMENTADO:** Balance debe ser cero o mayor ($0.00 o más).
+            if (request.balance().compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Bank accounts (Savings, Current, Fixed Term) require an initial balance of zero or greater.");
+            }
+
+            // 3. Manejo de tipos específicos dentro de las cuentas pasivas
+            if (request.productType() == ProductType.PASSIVE) {
+                 if (request.accountType() == AccountType.FIXED_TERM_DEPOSIT) {
+                    if (request.specificDepositDate() == null) {
+                        throw new IllegalArgumentException("Fixed-term deposits require a specific deposit date.");
+                    }
                 }
             }
         }
@@ -202,5 +208,144 @@ public class AccountServiceImpl implements AccountService {
                 throw new IllegalArgumentException("Cannot eliminate an active account with a non-zero amount used.");
             }
         }
+    }
+
+    /**
+     * Verifica si el tipo de cuenta está sujeto a la regla de "balance de apertura >= 0"
+     * (Ahorro, Corriente, Plazo Fijo).
+     */
+    private boolean isBankTypeAccount(AccountType type) {
+        if (type == null) {
+            return false;
+        }
+        return type == AccountType.SAVINGS_ACCOUNT ||
+                type == AccountType.CURRENT_ACCOUNT ||
+                type == AccountType.FIXED_TERM_DEPOSIT;
+    }
+
+    private Uni<Void> validateVipEligibility(AccountRequest request) {
+        // El tipo de cuenta que se está creando.
+        AccountType requestedType = request.accountType();
+        String customerId = request.customerId();
+
+        // --- LÓGICA PARA CUENTAS NO-AHORRO (Hereda regla de Unicidad de PERSONAL) ---
+        if (requestedType != AccountType.SAVINGS_ACCOUNT) {
+
+            // REGLA: Un cliente VIP (Personal) solo puede tener UNA cuenta de cada tipo (Corriente, Plazo Fijo, etc.).
+            // Sustituido: find("customerId = ?1 and accountType = ?2", ...).count()
+            return accountRepository.countAccountsByType(customerId, requestedType)
+                    .onItem().transformToUni(count -> {
+                        if (count >= 1) {
+                            return Uni.createFrom().failure(new IllegalArgumentException(
+                                    "A VIP customer can only have one " + requestedType + " account (excluding Savings)."
+                            ));
+                        }
+                        return Uni.createFrom().voidItem();
+                    });
+        }
+
+        // --- LÓGICA PARA CUENTA DE AHORRO VIP (Reglas Especiales) ---
+        // REGLA 1: Debe tener una Tarjeta de Crédito activa (ASÍNCRONO - LÓGICA LOCAL)
+        return accountRepository.hasActiveCreditCard(customerId)
+                .onItem().transformToUni(hasCreditCard -> {
+                    if (Boolean.FALSE.equals(hasCreditCard)) {
+                        return Uni.createFrom().failure(new IllegalArgumentException(
+                                "El cliente VIP debe tener una tarjeta de crédito activa para abrir una Cuenta de Ahorro VIP."
+                        ));
+                    }
+
+                    // REGLA 2: No debe tener ya una cuenta de ahorro VIP.
+                    // Sustituido: find("customerId = ?1 and accountType = ?2", ...).count()
+                    return accountRepository.countAccountsByType(customerId, requestedType) // <-- USO CLEAN CODE
+                            .onItem().transformToUni(count -> {
+                                if (count >= 1) {
+                                    return Uni.createFrom().failure(new IllegalArgumentException("Un cliente VIP solo puede tener una cuenta de ahorro VIP."));
+                                }
+                                return Uni.createFrom().voidItem();
+                            });
+                });
+    }
+
+    private Uni<Void> validatePymeEligibility(AccountRequest request) {
+
+        // REGLA CLAVE 1: El perfil PYME solo aplica sus reglas a la CUENTA CORRIENTE.
+        if (request.accountType() != AccountType.CURRENT_ACCOUNT) {
+            // Un cliente PYME no puede tener cuentas de Ahorro o Plazo Fijo.
+            if (request.accountType() == AccountType.SAVINGS_ACCOUNT || request.accountType() == AccountType.FIXED_TERM_DEPOSIT) {
+                return Uni.createFrom().failure(new IllegalArgumentException("A PYME customer cannot have savings or fixed-term deposit accounts."));
+            }
+            return Uni.createFrom().voidItem();
+        }
+
+        // REGLA CLAVE 2: Debe tener una Tarjeta de Crédito activa (ASÍNCRONO - LÓGICA LOCAL)
+        return accountRepository.hasActiveCreditCard(request.customerId())
+                .onItem().transformToUni(hasCreditCard -> {
+                    if (Boolean.FALSE.equals(hasCreditCard)) {
+                        return Uni.createFrom().failure(new IllegalArgumentException(
+                                "El cliente PYME debe tener una tarjeta de crédito activa para abrir una Cuenta Corriente PYME."
+                        ));
+                    }
+
+                    // REGLA 3 (Heredada): Debe tener al menos un titular.
+                    if (request.holders() == null || request.holders().isEmpty()) {
+                        return Uni.createFrom().failure(new IllegalArgumentException("A business account must have at least one holder."));
+                    }
+
+                    return Uni.createFrom().voidItem();
+                });
+    }
+
+    // --- Nuevo Método: Asignar Atributos y Persistir ---
+    private Uni<AccountResponse> assignSpecialAttributesAndPersist(AccountRequest request) {
+        return customerServiceRestClient.getCustomerById(request.customerId())
+                .onItem().transformToUni(customerResponse -> {
+
+                    Account newAccount = accountMapper.toEntity(request);
+                    CustomerType customerType = customerResponse.type();
+
+                    // --- LÓGICA DE INICIALIZACIÓN BÁSICA ---
+                    newAccount.setAccountNumber(UUID.randomUUID().toString());
+                    newAccount.setOpeningDate(LocalDateTime.now());
+                    newAccount.setStatus(AccountStatus.ACTIVE);
+                    // 1. INICIALIZACIÓN DE COMISIÓN DE MANTENIMIENTO (DEFAULT)
+                    newAccount.maintenanceFeeAmount = new BigDecimal("10.00");
+                    newAccount.requiredDailyAverage = BigDecimal.ZERO;
+
+                    // 2. INICIALIZACIÓN DE LÍMITES DE TRANSACCIÓN (DEFAULT: PERSONAL/EMPRESARIAL)
+                    if (request.productType() == ProductType.PASSIVE) {
+                        newAccount.freeTransactionLimit = 2; // 2 transacciones gratuitas por defecto
+                        newAccount.transactionFeeAmount = new BigDecimal("0.50"); // Comisión de $0.50 por excedente
+                        newAccount.currentMonthlyTransactions = 0; // Contador inicia en cero
+                    } else {
+                        // Para productos ACTIVE (TC/Préstamos), estos campos no aplican
+                        newAccount.freeTransactionLimit = null;
+                        newAccount.transactionFeeAmount = null;
+                        newAccount.currentMonthlyTransactions = null;
+                    }
+
+                    // LÓGICA DE ASIGNACIÓN VIP (Ahorro)
+                    if (customerResponse.type() == CustomerType.VIP &&
+                            request.accountType() == AccountType.SAVINGS_ACCOUNT) {
+
+                        // Requisito de Monitoreo
+                        newAccount.requiredDailyAverage = new BigDecimal("1000.00");
+                        // Comisión Cero (sin comisión)
+                        newAccount.maintenanceFeeAmount = BigDecimal.ZERO;
+                        newAccount.freeTransactionLimit = 999; // Prácticamente ilimitado
+                        newAccount.transactionFeeAmount = BigDecimal.ZERO; // Comisión de transacción Cero
+                        log.info("Assigned VIP attributes: Avg. $1000.00, Fee $0.00, Txn Limit 999");
+                    }
+                    // LÓGICA DE ASIGNACIÓN PYME (Cuenta Corriente)
+                    else if (customerResponse.type() == CustomerType.PYME &&
+                            request.accountType() == AccountType.CURRENT_ACCOUNT) {
+                        // Regla Especial PYME: Limite moderado con comisión baja
+                        newAccount.freeTransactionLimit = 100; // Límite más alto que el estándar
+                        newAccount.transactionFeeAmount = new BigDecimal("0.10"); // Comisión baja por excedente
+
+                        log.info("Assigned PYME attributes: Fee $0.00, Txn Limit 100, Txn Fee $0.10");
+                    }
+                    return accountRepository.persist(newAccount)
+                            .onItem().transform(accountMapper::toResponse);
+                });
     }
 }

@@ -25,6 +25,13 @@ public class Account {
     public Integer monthlyMovements; // Opcional: Para cuentas de ahorro
     public LocalDateTime specificDepositDate; // Opcional: Para plazo fijo
     public AccountStatus status;
+    public BigDecimal requiredDailyAverage; // <-- Requisito de Monitoreo VIP
+    // CAMPO AÑADIDO: Monto de la comisión de mantenimiento (Cero para PYME)
+    public BigDecimal maintenanceFeeAmount; // <-- Nuevo campo para el costo
+    // --- NUEVOS CAMPOS DE TRANSACCIÓN ---
+    public Integer freeTransactionLimit;
+    public BigDecimal transactionFeeAmount;
+    public Integer currentMonthlyTransactions = 0;
     // Campos corregidos para titulares y firmantes
     private List<String> holders;
     private List<String> signatories;

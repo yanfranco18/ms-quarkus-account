@@ -19,7 +19,10 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         int status;
         String error;
 
-        if (exception instanceof IllegalArgumentException) {
+        if (exception instanceof BusinessException) {
+            status = Response.Status.BAD_REQUEST.getStatusCode();
+            error = "Violación de Regla de Negocio";
+        } else if (exception instanceof IllegalArgumentException) {
             status = Response.Status.BAD_REQUEST.getStatusCode();
             error = "Bad Request";
         } else if (exception instanceof MongoCommandException) {

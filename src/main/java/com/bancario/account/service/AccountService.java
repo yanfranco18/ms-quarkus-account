@@ -2,6 +2,7 @@ package com.bancario.account.service;
 
 import com.bancario.account.dto.AccountRequest;
 import com.bancario.account.dto.AccountResponse;
+import com.bancario.account.dto.AccountTransactionStatus;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.Multi;
 
