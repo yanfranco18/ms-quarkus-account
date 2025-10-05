@@ -2,6 +2,7 @@ package com.bancario.account.resource;
 
 import com.bancario.account.dto.AccountRequest;
 import com.bancario.account.dto.AccountResponse;
+import com.bancario.account.dto.AccountTransactionStatus;
 import com.bancario.account.service.AccountService;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -94,5 +95,38 @@ public class AccountResource {
                     }
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
                 });
+    }
+
+    /**
+     * Endpoint consultado por el Transaction-Service para obtener límites y contador.
+     */
+    @GET
+    @Path("/{accountId}/transaction-status")
+    @Operation(summary = "Consulta la configuración de límites de transacciones y el contador mensual.",
+            description = "Usado por el Transaction-Service para determinar si se debe aplicar comisión.")
+    @APIResponse(responseCode = "200", description = "Devuelve el estado actual del contador, límite y monto de la tarifa.")
+    @APIResponse(responseCode = "404", description = "Cuenta no encontrada.")
+    @APIResponse(responseCode = "400", description = "La cuenta no es de tipo transaccional (Pasivo).")
+    public Uni<AccountTransactionStatus> getTransactionStatus(
+            @PathParam(value = "accountId") String accountId) {
+
+        return accountService.getAccountTransactionStatus(accountId);
+    }
+
+    /**
+     * Endpoint llamado por el Transaction-Service para incrementar el contador de forma atómica.
+     */
+    @PATCH // PATCH es el verbo más adecuado para actualizar una porción del recurso (el contador).
+    @Path("/{accountId}/increment-transactions")
+    @Operation(summary = "Incrementa atómicamente el contador mensual de transacciones de la cuenta.",
+            description = "Esta operación es atómica para garantizar la coherencia del contador bajo alta concurrencia.")
+    @APIResponse(responseCode = "200", description = "Contador incrementado exitosamente.")
+    @APIResponse(responseCode = "404", description = "Cuenta no encontrada.")
+    public Uni<Response> incrementTransactions(
+            @PathParam(value = "accountId") String accountId) {
+        // Llama al servicio, que ejecuta la lógica atómica del repositorio.
+        return accountService.incrementMonthlyTransactionCounter(accountId)
+                // Transforma el Uni<Void> retornado por el servicio en una respuesta HTTP 200 OK.
+                .onItem().transform(ignored -> Response.ok().build());
     }
 }

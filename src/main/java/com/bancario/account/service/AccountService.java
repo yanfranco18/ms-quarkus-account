@@ -48,4 +48,17 @@ public interface AccountService {
      * @return A Uni that emits the updated account.
      */
     Uni<AccountResponse> updateAccountBalance(String accountId, AccountResponse updatedAccount);
+
+    /**
+     * Recupera la configuración de tarifas y el estado actual de transacciones
+     * (límites y contador) para que el Transaction-Service pueda aplicar la regla de tarificación.
+     */
+    Uni<AccountTransactionStatus> getAccountTransactionStatus(String accountId);
+
+    /**
+     * Incrementa atómicamente el contador mensual de transacciones de la cuenta.
+     * Llamado por el Transaction-Service después de cada depósito/retiro exitoso.
+     * Retorna Uni<Void> ya que al Transaction-Service solo le importa que la operación se complete.
+     */
+    Uni<Void> incrementMonthlyTransactionCounter(String accountId);
 }

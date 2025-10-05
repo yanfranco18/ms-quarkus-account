@@ -3,18 +3,22 @@ package com.bancario.account.service.impl;
 import com.bancario.account.client.CustomerServiceRestClient;
 import com.bancario.account.dto.AccountRequest;
 import com.bancario.account.dto.AccountResponse;
+import com.bancario.account.dto.AccountTransactionStatus;
 import com.bancario.account.enums.AccountStatus;
 import com.bancario.account.enums.AccountType;
 import com.bancario.account.enums.ProductType;
 import com.bancario.account.enums.CustomerType;
+import com.bancario.account.exception.BusinessException;
 import com.bancario.account.mapper.AccountMapper;
 import com.bancario.account.repository.AccountRepository;
 import com.bancario.account.repository.entity.Account;
 import com.bancario.account.service.AccountService;
+import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.math.BigDecimal;
@@ -105,6 +109,43 @@ public class AccountServiceImpl implements AccountService {
                                 return Uni.createFrom().item(accountMapper.toResponse(account));
                             });
                 });
+    }
+
+    @Override
+    public Uni<AccountTransactionStatus> getAccountTransactionStatus(String accountId) {
+        return accountRepository.findById(new ObjectId(accountId))
+                .onItem().ifNotNull().transform(account -> {
+                    // 1. Validación de Producto: La regla aplica a cuentas pasivas.
+                    if (account.productType != ProductType.PASSIVE) {
+                        throw new BusinessException("Solo las cuentas pasivas (Ahorro/Corriente) tienen límites de transacciones.");
+                    }
+                    // 2. Mapeo al DTO de estado de transacción
+                    return new AccountTransactionStatus(
+                            account.freeTransactionLimit,
+                            account.currentMonthlyTransactions,
+                            account.transactionFeeAmount
+                    );
+                })
+                .onItem().ifNull().failWith(() -> new NotFoundException("Cuenta con ID " + accountId + " no encontrada."));
+    }
+
+    @Override
+    public Uni<Void> incrementMonthlyTransactionCounter(String accountId) {
+        // Llama al repositorio, que usa el comando atómico y devuelve Uni<Long> (el conteo).
+        return accountRepository.incrementMonthlyTransactionCounter(accountId)
+                // Usamos transformToUni para inspeccionar el resultado del conteo
+                .onItem().transformToUni(updatedCount -> {
+                    // Si el conteo es 0, significa que la cuenta no se encontró para actualizar.
+                    if (updatedCount == 0) {
+                        // Lanzar una excepción que el Controller mapeará a HTTP 404
+                        return Uni.createFrom().failure(new NotFoundException("Account not found with ID: " + accountId));
+                    }
+                    // Si el conteo es > 0 (normalmente 1), la operación fue exitosa.
+                    // Retornamos Uni<Void> como lo requiere el contrato del Service.
+                    return Uni.createFrom().voidItem();
+                })
+                // Opcional: Manejo de errores de base de datos.
+                .onFailure().invoke(e -> log.error("Error al incrementar el contador atómico: {}", e.getMessage()));
     }
 
     // Método para la validación de cuentas activas (créditos)
@@ -313,7 +354,7 @@ public class AccountServiceImpl implements AccountService {
 
                     // 2. INICIALIZACIÓN DE LÍMITES DE TRANSACCIÓN (DEFAULT: PERSONAL/EMPRESARIAL)
                     if (request.productType() == ProductType.PASSIVE) {
-                        newAccount.freeTransactionLimit = 2; // 2 transacciones gratuitas por defecto
+                        newAccount.freeTransactionLimit = 4; // 4 transacciones gratuitas por defecto
                         newAccount.transactionFeeAmount = new BigDecimal("0.50"); // Comisión de $0.50 por excedente
                         newAccount.currentMonthlyTransactions = 0; // Contador inicia en cero
                     } else {

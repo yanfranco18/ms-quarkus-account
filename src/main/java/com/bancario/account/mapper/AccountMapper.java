@@ -19,7 +19,7 @@ public interface AccountMapper {
     @Mapping(target = "signatories", source = "signatories")
     @Mapping(target = "creditType", source = "creditType")
     @Mapping(target = "monthlyMovements", ignore = true)
-    @Mapping(target = "amountUsed", source = "amountUsed")
+    @Mapping(target = "amountUsed", ignore = true)
     Account toEntity(AccountRequest request);
 
     @Mapping(target = "id", source = "id", qualifiedByName = "mapObjectIdToString")

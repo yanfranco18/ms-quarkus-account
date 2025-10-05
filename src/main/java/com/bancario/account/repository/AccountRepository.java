@@ -5,9 +5,14 @@ import com.bancario.account.enums.AccountType;
 import com.bancario.account.enums.CreditType;
 import com.bancario.account.enums.ProductType;
 import com.bancario.account.repository.entity.Account;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
+import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 
 @ApplicationScoped
 public class AccountRepository implements ReactivePanacheMongoRepository<Account> {
@@ -42,5 +47,24 @@ public class AccountRepository implements ReactivePanacheMongoRepository<Account
     public Uni<Long> countActiveProducts(String customerId) {
         return find("customerId = ?1 and productType = ?2", customerId, ProductType.ACTIVE)
                 .count();
+    }
+
+    /**
+     * Incrementa atómicamente el contador mensual de transacciones.
+     * Utiliza el método 'update' de Panache con sintaxis String/JSON para la actualización.
+     */
+    public Uni<Long> incrementMonthlyTransactionCounter(String id) {
+
+        ObjectId objectId = new ObjectId(id);
+
+        // 1. Comando de actualización atómica ($inc) como String.
+        String updateCommandString = "{$inc: {currentMonthlyTransactions: 1}}";
+
+        // 2. Llamada a update() con el comando y el parámetro de filtro implícito (por ID).
+        // 3. .all() finaliza la operación y la convierte a Uni<Long>.
+        return update(
+                updateCommandString,
+                objectId
+        ).all();
     }
 }
