@@ -361,7 +361,9 @@ public class AccountServiceImpl implements AccountService {
                     CustomerType customerType = customerResponse.type();
 
                     // --- LÓGICA DE INICIALIZACIÓN BÁSICA ---
-                    newAccount.setAccountNumber(UUID.randomUUID().toString());
+                    newAccount.setAccountNumber(
+                            generateAccountNumber(request.productType(), request.accountType())
+                    );
                     newAccount.setOpeningDate(LocalDateTime.now());
                     newAccount.setStatus(AccountStatus.ACTIVE);
                     // 1. INICIALIZACIÓN DE COMISIÓN DE MANTENIMIENTO (DEFAULT)
@@ -406,5 +408,65 @@ public class AccountServiceImpl implements AccountService {
                     return accountRepository.persist(newAccount)
                             .onItem().transform(accountMapper::toResponse);
                 });
+    }
+
+    /**
+     * Genera un número de cuenta único con un prefijo basado en el tipo de producto
+     * (Activo/Pasivo) y el tipo de cuenta específico (Ahorro, Corriente, Plazo Fijo).
+     *
+     * Los prefijos bancarios son:
+     * - 0300-: Para todas las cuentas de Crédito (ACTIVE).
+     * - 0200-: Cuenta de Ahorro (SAVINGS_ACCOUNT).
+     * - 0201-: Cuenta Corriente (CURRENT_ACCOUNT).
+     * - 0202-: Plazo Fijo (FIXED_TERM_DEPOSIT).
+     *
+     * @param productType El tipo de producto (ACTIVE/PASSIVE) de la nueva cuenta.
+     * @param accountType El tipo de cuenta específico (e.g., SAVINGS_ACCOUNT).
+     * @return String El número de cuenta generado con el formato [PREFIJO]-[8 dígitos aleatorios].
+     */
+    private String generateAccountNumber(ProductType productType, AccountType accountType) {
+        String prefix;
+        log.info("Generating account number for ProductType: {} and AccountType: {}", productType, accountType);
+
+        // 1. DETERMINAR EL PREFIJO BASADO EN LA CATEGORÍA DEL PRODUCTO
+        if (productType == ProductType.ACTIVE) {
+            // Regla de Negocio: Todas las cuentas de CRÉDITO (ACTIVE) usan el mismo prefijo.
+            prefix = "0300-";
+            log.debug("Assigned prefix 0300- for ACTIVE product.");
+
+        } else { // ProductType.PASSIVE
+            // 2. DETERMINAR EL PREFIJO PARA CUENTAS PASIVAS
+            switch (accountType) {
+                case SAVINGS_ACCOUNT:
+                    // Cuentas de Ahorro: 0200-
+                    prefix = "0200-";
+                    log.debug("Assigned prefix 0200- for SAVINGS_ACCOUNT.");
+                    break;
+                case CURRENT_ACCOUNT:
+                    // Cuentas Corrientes: 0201-
+                    prefix = "0201-";
+                    log.debug("Assigned prefix 0201- for CURRENT_ACCOUNT.");
+                    break;
+                case FIXED_TERM_DEPOSIT:
+                    // Cuentas de Plazo Fijo: 0202-
+                    prefix = "0202-";
+                    log.debug("Assigned prefix 0202- for FIXED_TERM_DEPOSIT.");
+                    break;
+                default:
+                    // Fallback: Si se recibe un tipo de cuenta pasiva no especificado.
+                    prefix = "0299-";
+                    log.warn("Using fallback prefix 0299- for unknown PASSIVE AccountType: {}", accountType);
+                    break;
+            }
+        }
+        // 3. GENERAR LA PARTE ALEATORIA DEL NÚMERO DE CUENTA
+        // Generamos una parte aleatoria de 8 dígitos para garantizar unicidad.
+        // El cálculo produce un número entero aleatorio entre 10,000,000 y 99,999,999.
+        long randomPart = (long) (Math.random() * 90_000_000L) + 10_000_000L;
+        String generatedNumber = prefix + String.valueOf(randomPart);
+
+        log.info("Generated final account number: {}", generatedNumber);
+        // 4. RETORNAR EL NÚMERO DE CUENTA COMPLETO
+        return generatedNumber;
     }
 }

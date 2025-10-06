@@ -72,7 +72,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"SAVINGS_ACCOUNT\",\n    \"creditType\": \"PERSONAL\",\n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 8,\n    \"transactionFeeAmount\": 0.50\n}",
+					"raw": "{\n    \"customerId\": \"68e330c1c3fda76c7af15eaa\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"SAVINGS_ACCOUNT\",\n    \"creditType\": \"PERSONAL\",\n    \"balance\": 500.00, \n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 8,\n    \"transactionFeeAmount\": 0.50\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -100,7 +100,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"CURRENT_ACCOUNT\",\n    \"creditType\": \"PERSONAL\",\n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 4,\n    \"transactionFeeAmount\": 0.50\n}",
+					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"CURRENT_ACCOUNT\",\n    \"creditType\": \"PERSONAL\",\n    \"balance\": 500.00, \n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 4,\n    \"transactionFeeAmount\": 0.50\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -128,7 +128,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"FIXED_TERM_DEPOSIT\",\n    \"creditType\": \"PERSONAL\",\n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 2,\n    \"transactionFeeAmount\": 0.50\n}",
+					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"FIXED_TERM_DEPOSIT\",\n    \"creditType\": \"PERSONAL\",\n    \"balance\": 500.00, \n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 2,\n    \"transactionFeeAmount\": 0.50\n}",
 					"options": {
 						"raw": {
 							"language": "json"
