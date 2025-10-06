@@ -67,4 +67,13 @@ public class AccountRepository implements ReactivePanacheMongoRepository<Account
                 objectId
         ).all();
     }
+
+    /**
+     * Busca una cuenta por su número de cuenta.
+     */
+    public Uni<Account> findByAccountNumber(String accountNumber) {
+        // Usamos el método Panache find para buscar por el campo 'accountNumber'
+        return find("accountNumber", accountNumber)
+                .firstResult(); // Esperamos solo un resultado (o null si no existe)
+    }
 }

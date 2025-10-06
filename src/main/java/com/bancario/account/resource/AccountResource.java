@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.core.Context;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -24,6 +25,7 @@ import java.util.NoSuchElementException;
 @Path("/accounts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Slf4j
 @Tag(name = "Cuentas", description = "Endpoints para la gestión de cuentas bancarias.")
 public class AccountResource {
 
@@ -128,5 +130,17 @@ public class AccountResource {
         return accountService.incrementMonthlyTransactionCounter(accountId)
                 // Transforma el Uni<Void> retornado por el servicio en una respuesta HTTP 200 OK.
                 .onItem().transform(ignored -> Response.ok().build());
+    }
+
+    @GET
+    @Path("/by-number/{accountNumber}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtiene una cuenta por su número.",
+            description = "Endpoint utilizado internamente por el Transaction-Service.")
+    @APIResponse(responseCode = "200", description = "Cuenta encontrada.")
+    @APIResponse(responseCode = "404", description = "Cuenta no encontrada.")
+    public Uni<AccountResponse> getAccountByNumber(@PathParam("accountNumber") String accountNumber) {
+        log.info("Recibida solicitud GET /accounts/by-number/{}", accountNumber);
+        return accountService.getAccountByNumber(accountNumber);
     }
 }

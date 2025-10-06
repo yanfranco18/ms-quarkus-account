@@ -3,6 +3,7 @@ package com.bancario.account.service;
 import com.bancario.account.dto.AccountRequest;
 import com.bancario.account.dto.AccountResponse;
 import com.bancario.account.dto.AccountTransactionStatus;
+import com.bancario.account.repository.entity.Account;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.Multi;
 
@@ -61,4 +62,9 @@ public interface AccountService {
      * Retorna Uni<Void> ya que al Transaction-Service solo le importa que la operación se complete.
      */
     Uni<Void> incrementMonthlyTransactionCounter(String accountId);
+
+    /**
+     * Obtiene una cuenta por su número de cuenta.
+     */
+    Uni<AccountResponse> getAccountByNumber(String accountNumber);
 }

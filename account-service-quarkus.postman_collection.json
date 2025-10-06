@@ -12,14 +12,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8081/accounts/68dd338b11df9ab17e6d22dc",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}/68dd338b11df9ab17e6d22dc",
 					"host": [
-						"localhost"
+						"{{URL_BASE}}"
 					],
-					"port": "8081",
 					"path": [
-						"accounts",
 						"68dd338b11df9ab17e6d22dc"
 					]
 				}
@@ -32,14 +29,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8081/accounts?customerId=<customer_id>",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}?customerId=<customer_id>",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					],
 					"query": [
 						{
@@ -57,14 +49,11 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8081/accounts/<account_id>",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}/<account_id>",
 					"host": [
-						"localhost"
+						"{{URL_BASE}}"
 					],
-					"port": "8081",
 					"path": [
-						"accounts",
 						"<account_id>"
 					]
 				}
@@ -83,7 +72,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68db4cc05de32144c5a2ce74\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"SAVINGS_ACCOUNT\",\n  \"creditType\": \"PERSONAL\",\n  \"balance\": 50.00\n}",
+					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"SAVINGS_ACCOUNT\",\n    \"creditType\": \"PERSONAL\",\n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 8,\n    \"transactionFeeAmount\": 0.50\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -91,14 +80,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -116,7 +100,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"CURRENT_ACCOUNT\",\n  \"balance\": 100.50\n}",
+					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"CURRENT_ACCOUNT\",\n    \"creditType\": \"PERSONAL\",\n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 4,\n    \"transactionFeeAmount\": 0.50\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -124,14 +108,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -149,7 +128,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"PASSIVE\",\n  \"accountType\": \"FIXED_TERM_DEPOSIT\",\n  \"balance\": 500.00,\n  \"specificDepositDate\": \"2026-03-15T10:00:00Z\"\n}",
+					"raw": "{\n    \"customerId\": \"[ID_DE_CLIENTE_EXISTENTE]\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"FIXED_TERM_DEPOSIT\",\n    \"creditType\": \"PERSONAL\",\n    \"maintenanceFeeAmount\": 10.00,\n    \"requiredDailyAverage\": 0.00,\n    \"freeTransactionLimit\": 2,\n    \"transactionFeeAmount\": 0.50\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -157,14 +136,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -190,14 +164,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -223,14 +192,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -256,14 +220,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -289,14 +248,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -322,14 +276,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -355,14 +304,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -388,14 +332,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -421,14 +360,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -454,14 +388,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -487,14 +416,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -520,14 +444,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -553,14 +472,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -586,14 +500,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -619,14 +528,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/accounts",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}",
 					"host": [
-						"localhost"
-					],
-					"port": "8081",
-					"path": [
-						"accounts"
+						"{{URL_BASE}}"
 					]
 				}
 			},
@@ -643,14 +547,11 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8081/accounts/65d4c9f1a2b3c4d5e6f7a8b9/transaction-status",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}/65d4c9f1a2b3c4d5e6f7a8b9/transaction-status",
 					"host": [
-						"localhost"
+						"{{URL_BASE}}"
 					],
-					"port": "8081",
 					"path": [
-						"accounts",
 						"65d4c9f1a2b3c4d5e6f7a8b9",
 						"transaction-status"
 					]
@@ -669,20 +570,101 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8081/accounts/65d4c9f1a2b3c4d5e6f7a8b9/increment-transactions",
-					"protocol": "http",
+					"raw": "{{URL_BASE}}/65d4c9f1a2b3c4d5e6f7a8b9/increment-transactions",
 					"host": [
-						"localhost"
+						"{{URL_BASE}}"
 					],
-					"port": "8081",
 					"path": [
-						"accounts",
 						"65d4c9f1a2b3c4d5e6f7a8b9",
 						"increment-transactions"
 					]
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "buscar-numero-cuenta",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{URL_BASE}}/by-number/cbd2799e-8c12-437a-bd8d-96743e5c9497",
+					"host": [
+						"{{URL_BASE}}"
+					],
+					"path": [
+						"by-number",
+						"cbd2799e-8c12-437a-bd8d-96743e5c9497"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "accounts-numero-tramsaccoes",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customerId\": \"68dd2f139efa39ca431a4e3f\",\n    \"productType\": \"PASSIVE\",\n    \"accountType\": \"SAVINGS_ACCOUNT\",\n    \"balance\": 100.00,\n    \"maintenanceFeeAmount\": 5.00,\n    \"requiredDailyAverage\": 500.00\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL_BASE}}/accounts",
+					"host": [
+						"{{URL_BASE}}"
+					],
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "URL_BASE",
+			"value": ""
 		}
 	]
 }

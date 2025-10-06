@@ -13,6 +13,7 @@ import com.bancario.account.mapper.AccountMapper;
 import com.bancario.account.repository.AccountRepository;
 import com.bancario.account.repository.entity.Account;
 import com.bancario.account.service.AccountService;
+import com.bancario.account.util.Constants;
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -129,6 +130,21 @@ public class AccountServiceImpl implements AccountService {
                 .onItem().ifNull().failWith(() -> new NotFoundException("Cuenta con ID " + accountId + " no encontrada."));
     }
 
+    /**
+     * Obtiene una cuenta por su número de cuenta.
+     * @param accountNumber El número de cuenta a buscar.
+     * @return Uni<Account> El objeto Account.
+     */
+    public Uni<AccountResponse> getAccountByNumber(String accountNumber) {
+        log.info("Buscando cuenta por número: {}", accountNumber);
+        return accountRepository.findByAccountNumber(accountNumber)
+                .onItem().ifNull().failWith(() -> {
+                    log.warn("Cuenta con número {} no encontrada.", accountNumber);
+                    return new NotFoundException("Account not found with number: " + accountNumber);
+                })
+                .onItem().transform(account -> accountMapper.toResponse(account));
+    }
+
     @Override
     public Uni<Void> incrementMonthlyTransactionCounter(String accountId) {
         // Llama al repositorio, que usa el comando atómico y devuelve Uni<Long> (el conteo).
@@ -136,7 +152,7 @@ public class AccountServiceImpl implements AccountService {
                 // Usamos transformToUni para inspeccionar el resultado del conteo
                 .onItem().transformToUni(updatedCount -> {
                     // Si el conteo es 0, significa que la cuenta no se encontró para actualizar.
-                    if (updatedCount == 0) {
+                    if (updatedCount == Constants.UPDATE_COUNTER) {
                         // Lanzar una excepción que el Controller mapeará a HTTP 404
                         return Uni.createFrom().failure(new NotFoundException("Account not found with ID: " + accountId));
                     }
@@ -349,14 +365,14 @@ public class AccountServiceImpl implements AccountService {
                     newAccount.setOpeningDate(LocalDateTime.now());
                     newAccount.setStatus(AccountStatus.ACTIVE);
                     // 1. INICIALIZACIÓN DE COMISIÓN DE MANTENIMIENTO (DEFAULT)
-                    newAccount.maintenanceFeeAmount = new BigDecimal("10.00");
-                    newAccount.requiredDailyAverage = BigDecimal.ZERO;
+                    newAccount.maintenanceFeeAmount = Constants.DEFAULT_MAINTENANCE_FEE;
+                    newAccount.requiredDailyAverage = Constants.INITIAL_BALANCE;
 
                     // 2. INICIALIZACIÓN DE LÍMITES DE TRANSACCIÓN (DEFAULT: PERSONAL/EMPRESARIAL)
                     if (request.productType() == ProductType.PASSIVE) {
-                        newAccount.freeTransactionLimit = 4; // 4 transacciones gratuitas por defecto
-                        newAccount.transactionFeeAmount = new BigDecimal("0.50"); // Comisión de $0.50 por excedente
-                        newAccount.currentMonthlyTransactions = 0; // Contador inicia en cero
+                        newAccount.freeTransactionLimit = Constants.DEFAULT_FREE_TXN_LIMIT; // 4 transacciones gratuitas por defecto
+                        newAccount.transactionFeeAmount = Constants.DEFAULT_TXN_FEE_AMOUNT; // Comisión de $0.50 por excedente
+                        newAccount.currentMonthlyTransactions = Constants.INITIAL_MONTHLY_TRANSACTIONS; // Contador inicia en cero
                     } else {
                         // Para productos ACTIVE (TC/Préstamos), estos campos no aplican
                         newAccount.freeTransactionLimit = null;
@@ -369,21 +385,23 @@ public class AccountServiceImpl implements AccountService {
                             request.accountType() == AccountType.SAVINGS_ACCOUNT) {
 
                         // Requisito de Monitoreo
-                        newAccount.requiredDailyAverage = new BigDecimal("1000.00");
+                        newAccount.requiredDailyAverage = Constants.VIP_REQUIRED_AVERAGE;
                         // Comisión Cero (sin comisión)
-                        newAccount.maintenanceFeeAmount = BigDecimal.ZERO;
-                        newAccount.freeTransactionLimit = 999; // Prácticamente ilimitado
-                        newAccount.transactionFeeAmount = BigDecimal.ZERO; // Comisión de transacción Cero
-                        log.info("Assigned VIP attributes: Avg. $1000.00, Fee $0.00, Txn Limit 999");
+                        newAccount.maintenanceFeeAmount = Constants.INITIAL_BALANCE;
+                        newAccount.freeTransactionLimit = Constants.VIP_FREE_TXN_LIMIT; // Prácticamente ilimitado
+                        newAccount.transactionFeeAmount = Constants.INITIAL_BALANCE; // Comisión de transacción Cero
+                        log.info("Assigned VIP attributes to account ID {}: Avg. ${}, Fee ${}, Txn Limit {}",
+                                newAccount.id, Constants.VIP_REQUIRED_AVERAGE, Constants.INITIAL_BALANCE, Constants.VIP_FREE_TXN_LIMIT);
                     }
                     // LÓGICA DE ASIGNACIÓN PYME (Cuenta Corriente)
                     else if (customerResponse.type() == CustomerType.PYME &&
                             request.accountType() == AccountType.CURRENT_ACCOUNT) {
                         // Regla Especial PYME: Limite moderado con comisión baja
-                        newAccount.freeTransactionLimit = 100; // Límite más alto que el estándar
-                        newAccount.transactionFeeAmount = new BigDecimal("0.10"); // Comisión baja por excedente
+                        newAccount.freeTransactionLimit = Constants.PYME_FREE_TXN_LIMIT; // Límite más alto que el estándar
+                        newAccount.transactionFeeAmount = Constants.PYME_TXN_FEE_AMOUNT; // Comisión baja por excedente
 
-                        log.info("Assigned PYME attributes: Fee $0.00, Txn Limit 100, Txn Fee $0.10");
+                        log.info("Assigned PYME attributes to account ID {}: Txn Limit {}, Txn Fee ${}",
+                                newAccount.id, Constants.PYME_FREE_TXN_LIMIT, Constants.PYME_TXN_FEE_AMOUNT);
                     }
                     return accountRepository.persist(newAccount)
                             .onItem().transform(accountMapper::toResponse);
