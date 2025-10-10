@@ -19,21 +19,32 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         int status;
         String error;
 
-        if (exception instanceof CustomerNotFoundException) {
-            status = Response.Status.NOT_FOUND.getStatusCode();
-            error = "Resource Not Found";
-        } else if (exception instanceof BusinessException) {
-            status = Response.Status.BAD_REQUEST.getStatusCode();
-            error = "Violación de Regla de Negocio";
-        } else if (exception instanceof IllegalArgumentException) {
-            status = Response.Status.BAD_REQUEST.getStatusCode();
-            error = "Bad Request";
-        } else if (exception instanceof MongoCommandException) {
-            status = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
-            error = "Database Error";
-        } else {
-            status = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
-            error = "Internal Server Error";
+        switch (exception) {
+            case CustomerNotFoundException customerNotFoundException -> {
+                status = Response.Status.NOT_FOUND.getStatusCode(); // 404
+                error = "Resource Not Found";
+            }
+            case ServiceUnavailableException serviceUnavailableException -> {
+                // Excepción lanzada por el Fallback/Circuit Breaker
+                status = Response.Status.SERVICE_UNAVAILABLE.getStatusCode(); // 503
+                error = "Service Unavailable (Fault Tolerance)";
+            }
+            case BusinessException businessException -> {
+                status = Response.Status.BAD_REQUEST.getStatusCode(); // 400
+                error = "Violación de Regla de Negocio";
+            }
+            case IllegalArgumentException illegalArgumentException -> {
+                status = Response.Status.BAD_REQUEST.getStatusCode(); // 400
+                error = "Bad Request";
+            }
+            case MongoCommandException mongoCommandException -> {
+                status = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(); // 500
+                error = "Database Error";
+            }
+            case null, default -> {
+                status = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(); // 500
+                error = "Internal Server Error";
+            }
         }
 
         ApiError apiError = ApiError.builder()

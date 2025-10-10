@@ -12,6 +12,7 @@ import com.bancario.account.enums.CustomerType;
 import com.bancario.account.exception.BusinessException;
 import com.bancario.account.exception.CustomerNotFoundException;
 import com.bancario.account.exception.DataAccessException;
+import com.bancario.account.exception.ServiceUnavailableException;
 import com.bancario.account.mapper.AccountMapper;
 import com.bancario.account.mapper.BalanceSnapshotMapper;
 import com.bancario.account.repository.AccountRepository;
@@ -27,6 +28,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Fallback;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -83,6 +87,9 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Timeout // Lee 1000ms del properties
+    @CircuitBreaker // Lee requestVolumeThreshold, failureRatio, delay, successThreshold
+    @Fallback(fallbackMethod = "fallbackBuscarPorCuentaId")
     public Uni<AccountResponse> buscarPorCuentaId(String accountId) {
         log.info("Finding account with ID: {}", accountId);
 
@@ -179,6 +186,9 @@ public class AccountServiceImpl implements AccountService {
      * @throws IllegalArgumentException Si el customerId es nulo o vacío.
      */
     @Override
+    @Timeout
+    @CircuitBreaker
+    @Fallback(fallbackMethod = "fallbackDailyBalances")
     public Uni<List<DailyBalanceHistoryDto>> getDailyBalancesByCustomer(
             String customerId,
             LocalDate startDate,
@@ -218,6 +228,9 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Timeout
+    @CircuitBreaker
+    @Fallback(fallbackMethod = "fallbackIncrementCounter")
     public Uni<Void> incrementMonthlyTransactionCounter(String accountId) {
         // Llama al repositorio, que usa el comando atómico y devuelve Uni<Long> (el conteo).
         return accountRepository.incrementMonthlyTransactionCounter(accountId)
@@ -541,4 +554,47 @@ public class AccountServiceImpl implements AccountService {
         // 4. RETORNAR EL NÚMERO DE CUENTA COMPLETO
         return generatedNumber;
     }
+
+    /**
+     * Método de contingencia (Fallback) para la consulta de cuentas por ID.
+     * Se activa si el método original falla por Timeout o Circuit Breaker abierto.
+     * @param accountId El ID de la cuenta que causó el fallo.
+     * @param failure La causa de la falla.
+     * @return Uni<AccountResponse> que lanza una excepción de servicio no disponible.
+     */
+    public Uni<AccountResponse> fallbackBuscarPorCuentaId(String accountId, Throwable failure) {
+        log.error("FALLBACK ACTIVO en buscarPorCuentaId para ID {}. Causa: {}", accountId, failure.getMessage());
+
+        String errorMessage = "El servicio de cuentas está temporalmente no disponible (Fallback activo).";
+
+        // Lanzamos la excepción para que sea mapeada a HTTP 503 por el GlobalExceptionMapper
+        return Uni.createFrom().failure(new ServiceUnavailableException(errorMessage));
+    }
+
+    /**
+     * Provee una excepción de servicio no disponible cuando falla la operación crítica.
+     */
+    public Uni<Void> fallbackIncrementCounter(String accountId, Throwable failure) {
+        log.error("FALLBACK ACTIVO para incremento de contador de cuenta {}. Causa: {}", accountId, failure.getMessage());
+
+        // Para operaciones de escritura críticas, la mejor opción es fallar con un error explícito.
+        String errorMessage = String.format("El servicio de actualización de contadores está inoperativo. Causa: %s", failure.getMessage());
+        return Uni.createFrom().failure(new ServiceUnavailableException(errorMessage, failure));
+    }
+
+    /**
+     * Método de Fallback para getDailyBalancesByCustomer.
+     */
+    public Uni<List<DailyBalanceHistoryDto>> fallbackDailyBalances(
+            String customerId,
+            LocalDate startDate,
+            LocalDate endDate,
+            Throwable failure
+    ) {
+        log.error("FALLBACK ACTIVO (Saldos Diarios) para cliente {}. Causa: {}", customerId, failure.getMessage());
+
+        String errorMessage = String.format("El servicio de historial de saldos está inoperativo. Causa: %s", failure.getMessage());
+        return Uni.createFrom().failure(new ServiceUnavailableException(errorMessage, failure));
+    }
+
 }
