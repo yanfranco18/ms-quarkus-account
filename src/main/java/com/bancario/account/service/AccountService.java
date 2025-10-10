@@ -3,9 +3,15 @@ package com.bancario.account.service;
 import com.bancario.account.dto.AccountRequest;
 import com.bancario.account.dto.AccountResponse;
 import com.bancario.account.dto.AccountTransactionStatus;
+import com.bancario.account.dto.DailyBalanceHistoryDto;
+import com.bancario.account.exception.CustomerNotFoundException;
+import com.bancario.account.exception.DataAccessException;
 import com.bancario.account.repository.entity.Account;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.Multi;
+
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Interfaz de servicio para la gestión de productos bancarios.
@@ -67,4 +73,24 @@ public interface AccountService {
      * Obtiene una cuenta por su número de cuenta.
      */
     Uni<AccountResponse> getAccountByNumber(String accountNumber);
+
+    /**
+     * Obtiene el historial de saldos/estados al final del día (EOD) para todos los productos
+     * (cuentas de depósito y créditos) que posee un cliente, dentro de un rango de fechas.
+     * * Este método es vital para cálculos analíticos como el Saldo Promedio Diario (SPD),
+     * cumpliendo con el Principio de Segregación de Interfaces (ISP) al agrupar una funcionalidad
+     * específica de consulta histórica.
+     *
+     * @param customerId El ID único del cliente para quien se solicitan los saldos.
+     * @param startDate La fecha de inicio del periodo de consulta (inclusiva).
+     * @param endDate La fecha de fin del periodo de consulta (inclusiva).
+     * @return Uni que emite una lista inmutable de DailyBalanceHistoryDto con los saldos diarios.
+     * @throws CustomerNotFoundException Si no se encuentra el cliente especificado.
+     * @throws DataAccessException Si ocurre un problema al acceder a la capa de persistencia.
+     */
+    Uni<List<DailyBalanceHistoryDto>> getDailyBalancesByCustomer(
+            String customerId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) throws CustomerNotFoundException, DataAccessException;
 }

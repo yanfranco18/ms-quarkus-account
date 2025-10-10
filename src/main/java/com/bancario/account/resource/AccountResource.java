@@ -3,6 +3,7 @@ package com.bancario.account.resource;
 import com.bancario.account.dto.AccountRequest;
 import com.bancario.account.dto.AccountResponse;
 import com.bancario.account.dto.AccountTransactionStatus;
+import com.bancario.account.dto.DailyBalanceHistoryDto;
 import com.bancario.account.service.AccountService;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -16,10 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Path("/accounts")
@@ -142,5 +146,36 @@ public class AccountResource {
     public Uni<AccountResponse> getAccountByNumber(@PathParam("accountNumber") String accountNumber) {
         log.info("Recibida solicitud GET /accounts/by-number/{}", accountNumber);
         return accountService.getAccountByNumber(accountNumber);
+    }
+
+    /**
+     * Endpoint reactivo para obtener el historial de saldos diarios (EOD) de un cliente.
+     * La gestión de excepciones (400, 500) se delega a un Global Exception Mapper.
+     */
+    @GET
+    @Path("/daily-balances")
+    @Operation(summary = "Obtiene el historial de saldos diarios (EOD) para un cliente.",
+            description = "Utilizado para el cálculo analítico del Saldo Promedio Diario (SPD).")
+    @APIResponse(responseCode = "200", description = "Lista de registros de saldo EOD.")
+    @APIResponse(responseCode = "400", description = "Parámetros inválidos (Manejado por Exception Mapper).")
+    @APIResponse(responseCode = "500", description = "Fallo interno (Manejado por Exception Mapper).")
+    public Uni<List<DailyBalanceHistoryDto>> getDailyBalances(
+            @Parameter(description = "ID único del cliente.")
+            @QueryParam("customerId")
+            String customerId,
+            @Parameter(description = "Fecha de inicio (YYYY-MM-DD).")
+            @QueryParam("startDate")
+            LocalDate startDate,
+            @Parameter(description = "Fecha de fin (YYYY-MM-DD).")
+            @QueryParam("endDate")
+            LocalDate endDate
+    ) {
+        log.info("SPD Resource: Solicitud recibida para customerId: {}", customerId);
+        return accountService.getDailyBalancesByCustomer(customerId, startDate, endDate)
+                // 2. Logging y retorno directo del item (la lista de DTOs).
+                // Mutiny se encarga de envolver el List<DTO> en la respuesta 200 OK.
+                .onItem().invoke(data -> {
+                    log.debug("SPD Resource: Retornando {} registros. Delegando la respuesta final.", data.size());
+                });
     }
 }

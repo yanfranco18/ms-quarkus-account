@@ -19,7 +19,10 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         int status;
         String error;
 
-        if (exception instanceof BusinessException) {
+        if (exception instanceof CustomerNotFoundException) {
+            status = Response.Status.NOT_FOUND.getStatusCode();
+            error = "Resource Not Found";
+        } else if (exception instanceof BusinessException) {
             status = Response.Status.BAD_REQUEST.getStatusCode();
             error = "Violación de Regla de Negocio";
         } else if (exception instanceof IllegalArgumentException) {

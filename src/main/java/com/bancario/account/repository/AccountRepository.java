@@ -5,13 +5,9 @@ import com.bancario.account.enums.AccountType;
 import com.bancario.account.enums.CreditType;
 import com.bancario.account.enums.ProductType;
 import com.bancario.account.repository.entity.Account;
-import com.mongodb.client.model.Updates;
-import com.mongodb.client.result.UpdateResult;
-import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.bson.Document;
 import org.bson.types.ObjectId;
 
 @ApplicationScoped

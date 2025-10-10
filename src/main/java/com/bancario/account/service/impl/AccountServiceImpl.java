@@ -4,14 +4,20 @@ import com.bancario.account.client.CustomerServiceRestClient;
 import com.bancario.account.dto.AccountRequest;
 import com.bancario.account.dto.AccountResponse;
 import com.bancario.account.dto.AccountTransactionStatus;
+import com.bancario.account.dto.DailyBalanceHistoryDto;
 import com.bancario.account.enums.AccountStatus;
 import com.bancario.account.enums.AccountType;
 import com.bancario.account.enums.ProductType;
 import com.bancario.account.enums.CustomerType;
 import com.bancario.account.exception.BusinessException;
+import com.bancario.account.exception.CustomerNotFoundException;
+import com.bancario.account.exception.DataAccessException;
 import com.bancario.account.mapper.AccountMapper;
+import com.bancario.account.mapper.BalanceSnapshotMapper;
 import com.bancario.account.repository.AccountRepository;
+import com.bancario.account.repository.BalanceSnapshotRepository;
 import com.bancario.account.repository.entity.Account;
+import com.bancario.account.repository.entity.BalanceSnapshot;
 import com.bancario.account.service.AccountService;
 import com.bancario.account.util.Constants;
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
@@ -23,9 +29,13 @@ import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.bson.types.ObjectId;
 
 @Slf4j
@@ -36,7 +46,13 @@ public class AccountServiceImpl implements AccountService {
     AccountRepository accountRepository;
 
     @Inject
+    BalanceSnapshotRepository snapshotRepository;
+
+    @Inject
     AccountMapper accountMapper;
+
+    @Inject
+    BalanceSnapshotMapper snapshotMapper;
 
     @Inject
     @RestClient
@@ -143,6 +159,62 @@ public class AccountServiceImpl implements AccountService {
                     return new NotFoundException("Account not found with number: " + accountNumber);
                 })
                 .onItem().transform(account -> accountMapper.toResponse(account));
+    }
+
+    /**
+     * Obtiene el historial de saldos/estados al final del día (EOD) para todos los productos
+     * (cuentas de depósito y créditos) que posee un cliente, dentro de un rango de fechas.
+     * * Este método orquesta la llamada al repositorio de snapshots, maneja la validación de la entrada,
+     * transforma los errores de persistencia en excepciones de la capa de negocio,
+     * y mapea las entidades BalanceSnapshot al DTO DailyBalanceHistoryDto para su transferencia
+     * usando el BalanceSnapshotMapper dedicado.
+     *
+     * @param customerId El ID único del cliente para quien se solicitan los saldos.
+     * @param startDate La fecha de inicio del periodo de consulta (inclusiva).
+     * @param endDate La fecha de fin del periodo de consulta (inclusiva).
+     * @return Uni que emite una lista inmutable de DailyBalanceHistoryDto con los saldos diarios.
+     * @throws CustomerNotFoundException Esta excepción puede ser lanzada si el cliente no es válido,
+     * aunque se prioriza devolver una lista vacía si no hay historial para el periodo.
+     * @throws DataAccessException Si ocurre un error irrecuperable al acceder a la capa de persistencia (ej. timeout de BD).
+     * @throws IllegalArgumentException Si el customerId es nulo o vacío.
+     */
+    @Override
+    public Uni<List<DailyBalanceHistoryDto>> getDailyBalancesByCustomer(
+            String customerId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) throws CustomerNotFoundException, DataAccessException {
+        log.info("SPD Consulta EOD para customerId: {}, rango: [{} - {}]",
+                customerId, startDate, endDate);
+
+        if (customerId == null || customerId.trim().isEmpty()) {
+            log.warn("Se intentó consultar saldos con customerId inválido.");
+            return Uni.createFrom().failure(new IllegalArgumentException("El ID de cliente es obligatorio."));
+        }
+        // 2. Orquestación y Flujo Reactivo
+        return snapshotRepository.findByCustomerAndDateRange(customerId, startDate, endDate)
+                // 3. Manejo de Fallos de Persistencia
+                // Usamos invoke para registrar el error y transform para lanzar la excepción de negocio
+                .onFailure().invoke(failure -> {
+                    // Log del error real del repositorio
+                    log.error("Fallo crítico al acceder al historial de saldos para customerId: {}. Causa: {}",
+                            customerId, failure.getMessage(), failure);
+                })
+                // Si hay un fallo, transformamos CUALQUIER fallo en nuestra DataAccessException
+                .onFailure().transform(failure -> new DataAccessException("Fallo al recuperar saldos diarios históricos.", failure))
+                // 4. Mapeo del Resultado (onItem().map)
+                .onItem().transform(snapshots -> {
+                    // Si la lista está vacía, retornamos lista vacía.
+                    if (snapshots.isEmpty()) {
+                        log.warn("No se encontraron snapshots de saldo en el rango solicitado para customerId: {}", customerId);
+                        return List.of();
+                    }
+                    // Mapeo de Entidad (BalanceSnapshot) a DTO (DailyBalanceHistoryDto)
+                    log.debug("Mapeando {} snapshots recuperados a DTOs para customerId: {}",
+                            snapshots.size(), customerId);
+
+                    return snapshotMapper.toDtoList(snapshots);
+                });
     }
 
     @Override

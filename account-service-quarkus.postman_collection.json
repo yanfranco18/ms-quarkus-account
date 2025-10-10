@@ -593,13 +593,13 @@
 					}
 				],
 				"url": {
-					"raw": "{{URL_BASE}}/by-number/cbd2799e-8c12-437a-bd8d-96743e5c9497",
+					"raw": "{{URL_BASE}}/by-number/0200-13360063",
 					"host": [
 						"{{URL_BASE}}"
 					],
 					"path": [
 						"by-number",
-						"cbd2799e-8c12-437a-bd8d-96743e5c9497"
+						"0200-13360063"
 					]
 				}
 			},
@@ -631,6 +631,42 @@
 					],
 					"path": [
 						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "daily-balances-customerId&startDate&endDate",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{URL_BASE}}/daily-balances?customerId=68db48d75de32144c5a2ce72&startDate=2025-10-01&endDate=2025-10-31",
+					"host": [
+						"{{URL_BASE}}"
+					],
+					"path": [
+						"daily-balances"
+					],
+					"query": [
+						{
+							"key": "customerId",
+							"value": "68db48d75de32144c5a2ce72"
+						},
+						{
+							"key": "startDate",
+							"value": "2025-10-01"
+						},
+						{
+							"key": "endDate",
+							"value": "2025-10-31"
+						}
 					]
 				}
 			},
