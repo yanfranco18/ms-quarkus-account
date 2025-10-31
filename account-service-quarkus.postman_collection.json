@@ -240,7 +240,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"PERSONAL\",\n  \"balance\": 5000.00,\n  \"amountUsed\": 5000.00\n}",
+					"raw": "{\n    \"customerId\": \"68c3c258ed0eda43227fd7b3\",\n    \"productType\": \"ACTIVE\",\n    \"creditType\": \"PERSONAL\",\n    \"balance\": 10000.00,\n    \"amountUsed\": 0.00,\n    \"paymentDayOfMonth\": 17\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -268,7 +268,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"BUSINESS\",\n  \"balance\": 10000.00,\n  \"amountUsed\": 10000.00\n}",
+					"raw": "{\n    \"customerId\": \"68c3c221ed0eda43227fd7b1\",\n    \"productType\": \"ACTIVE\",\n    \"creditType\": \"BUSINESS\",\n    \"balance\": 10000.00,\n    \"amountUsed\": 0.00,\n    \"paymentDayOfMonth\": 17\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -296,7 +296,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68c3c26ded0eda43227fd7b4\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 2500.00,\n  \"amountUsed\": 2500.00\n}",
+					"raw": "{\n    \"customerId\": \"68c3c26ded0eda43227fd7b4\",\n    \"productType\": \"ACTIVE\",\n    \"creditType\": \"CREDIT_CARD\",\n    \"balance\": 10000.00,\n    \"amountUsed\": 0.00,\n    \"paymentDayOfMonth\": 17\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -324,7 +324,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"customerId\": \"68d219bcdff04a9baa190f8f\",\n  \"productType\": \"ACTIVE\",\n  \"creditType\": \"CREDIT_CARD\",\n  \"balance\": 50000,\n  \"amountUsed\": 5000\n}",
+					"raw": "{\n    \"customerId\": \"68d219bcdff04a9baa190f8f\",\n    \"productType\": \"ACTIVE\",\n    \"creditType\": \"CREDIT_CARD\",\n    \"balance\": 10000.00,\n    \"amountUsed\": 0.00,\n    \"paymentDayOfMonth\": 17\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -647,7 +647,7 @@
 					}
 				],
 				"url": {
-					"raw": "{{URL_BASE}}/daily-balances?customerId=68db48d75de32144c5a2ce72&startDate=2025-10-01&endDate=2025-10-31",
+					"raw": "{{URL_BASE}}/daily-balances?customerId=68dd2f139efa39ca431a4e3f&startDate=2025-10-01&endDate=2025-10-31",
 					"host": [
 						"{{URL_BASE}}"
 					],
@@ -657,7 +657,7 @@
 					"query": [
 						{
 							"key": "customerId",
-							"value": "68db48d75de32144c5a2ce72"
+							"value": "68dd2f139efa39ca431a4e3f"
 						},
 						{
 							"key": "startDate",

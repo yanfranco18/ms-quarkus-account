@@ -9,19 +9,14 @@ import com.bancario.account.enums.AccountStatus;
 import com.bancario.account.enums.AccountType;
 import com.bancario.account.enums.ProductType;
 import com.bancario.account.enums.CustomerType;
-import com.bancario.account.exception.BusinessException;
-import com.bancario.account.exception.CustomerNotFoundException;
-import com.bancario.account.exception.DataAccessException;
-import com.bancario.account.exception.ServiceUnavailableException;
+import com.bancario.account.exception.*;
 import com.bancario.account.mapper.AccountMapper;
 import com.bancario.account.mapper.BalanceSnapshotMapper;
 import com.bancario.account.repository.AccountRepository;
 import com.bancario.account.repository.BalanceSnapshotRepository;
 import com.bancario.account.repository.entity.Account;
-import com.bancario.account.repository.entity.BalanceSnapshot;
 import com.bancario.account.service.AccountService;
 import com.bancario.account.util.Constants;
-import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -37,8 +32,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 
@@ -63,32 +56,42 @@ public class AccountServiceImpl implements AccountService {
     CustomerServiceRestClient customerServiceRestClient;
 
     @Override
+    //@Timeout
+    //@CircuitBreaker
+    //@Fallback(fallbackMethod = "fallbackCrearCuenta")
     public Uni<AccountResponse> crearCuenta(AccountRequest request) {
         log.info("Creating a new account for customer with ID: {}", request.customerId());
-
         // 1. Realiza las validaciones síncronas primero.
         try {
             validateSynchronousAccountCreation(request);
+            // 🔑 CORRECCIÓN 1: Usar request.paymentDayOfMonth() y actualizar el mensaje.
+            if (request.productType() == ProductType.ACTIVE && request.paymentDayOfMonth() == null) {
+                return Uni.createFrom().failure(new IllegalArgumentException("El campo paymentDayOfMonth es obligatorio para productos de crédito (ACTIVE)."));
+            }
         } catch (IllegalArgumentException e) {
             return Uni.createFrom().failure(e);
         }
-
-        // 2. Encadena las validaciones asíncronas de forma condicional.
-        Uni<Void> validationUni;
-        if (request.productType() == ProductType.ACTIVE) {
-            validationUni = validateActiveAccountCreation(request);
-        } else if (request.productType() == ProductType.PASSIVE) {
-            validationUni = validatePassiveAccountCreation(request);
-        } else {
-            // Si no es un tipo de producto válido, lanza una excepción o devuelve un Uni vacío.
-            return Uni.createFrom().failure(new IllegalArgumentException("Invalid product type."));
-        }
-        return validationUni.chain(() -> assignSpecialAttributesAndPersist(request));
+        // 2. Ejecutar la validación de riesgo JIT (Fail-Safe CRÍTICO)
+        // El flujo solo continúa si validateOverdueDebt (que retorna Uni<Void>) pasa sin errores.
+        return validateOverdueDebt(request.customerId())
+                .chain(() -> {
+                    // 3. Encadenar las validaciones asíncronas de tipo de producto.
+                    Uni<Void> validationUni;
+                    if (request.productType() == ProductType.ACTIVE) {
+                        validationUni = validateActiveAccountCreation(request);
+                    } else if (request.productType() == ProductType.PASSIVE) {
+                        validationUni = validatePassiveAccountCreation(request);
+                    } else {
+                        return Uni.createFrom().failure(new IllegalArgumentException("Invalid product type."));
+                    }
+                    // 4. Si todas las validaciones asíncronas pasan, proceder a la persistencia.
+                    return validationUni.chain(() -> assignSpecialAttributesAndPersist(request));
+                });
     }
 
     @Override
-    @Timeout // Lee 1000ms del properties
-    @CircuitBreaker // Lee requestVolumeThreshold, failureRatio, delay, successThreshold
+    @Timeout
+    @CircuitBreaker
     @Fallback(fallbackMethod = "fallbackBuscarPorCuentaId")
     public Uni<AccountResponse> buscarPorCuentaId(String accountId) {
         log.info("Finding account with ID: {}", accountId);
@@ -437,6 +440,48 @@ public class AccountServiceImpl implements AccountService {
                 });
     }
 
+    /**
+     * Valida si el cliente tiene alguna deuda vencida en productos de crédito (ACTIVE)
+     * de forma JIT (Just-In-Time) sin reintentos.
+     * @param customerId ID del cliente.
+     * @return Uni<Void> vacío si está limpio, Uni<Exception> si tiene deuda o si la verificación falla.
+     */
+    private Uni<Void> validateOverdueDebt(String customerId) {
+        final int todayDay = LocalDate.now().getDayOfMonth(); // Obtener solo el día (ej. 18)
+        log.info("Iniciando chequeo JIT de deuda vencida para cliente: {}", customerId);
+
+        return accountRepository.findActiveAccountsByCustomerId(customerId)
+                .onItem().transformToUni(activeAccounts -> {
+
+                    Account overdueAccount = activeAccounts.stream()
+                            .filter(account ->
+                                    account.getAmountUsed() != null &&
+                                            account.getAmountUsed().compareTo(BigDecimal.ZERO) > 0 &&
+                                            account.getPaymentDayOfMonth() != null &&
+
+                                            // 🔑 LÓGICA CLAVE: ¿El día de pago ya pasó en este mes?
+                                            // (Ejemplo: Hoy es 18, y paymentDayOfMonth es 17)
+                                            account.getPaymentDayOfMonth() < todayDay
+                            )
+                            .findFirst()
+                            .orElse(null);
+
+                    // ... [El resto de la lógica de bloqueo y mensajes se mantiene igual] ...
+                    if (overdueAccount != null) {
+
+                        BigDecimal currentOverdueAmount = overdueAccount.getAmountUsed();
+
+                        // Denegación por Regla de Negocio
+                        return Uni.createFrom().failure(new BusinessException(
+                                "El cliente posee productos de crédito con deuda vencida. El día de pago (" + overdueAccount.getPaymentDayOfMonth() + ") ha pasado en el mes actual. Monto vencido (base JIT): " + currentOverdueAmount + "."
+                        ));
+                    }
+
+                    log.info("Cliente {} limpio de deuda vencida (JIT OK).", customerId);
+                    return Uni.createFrom().voidItem();
+                });
+    }
+
     // --- Nuevo Método: Asignar Atributos y Persistir ---
     private Uni<AccountResponse> assignSpecialAttributesAndPersist(AccountRequest request) {
         return customerServiceRestClient.getCustomerById(request.customerId())
@@ -460,11 +505,21 @@ public class AccountServiceImpl implements AccountService {
                         newAccount.freeTransactionLimit = Constants.DEFAULT_FREE_TXN_LIMIT; // 4 transacciones gratuitas por defecto
                         newAccount.transactionFeeAmount = Constants.DEFAULT_TXN_FEE_AMOUNT; // Comisión de $0.50 por excedente
                         newAccount.currentMonthlyTransactions = Constants.INITIAL_MONTHLY_TRANSACTIONS; // Contador inicia en cero
+                        // Campos de crédito a null o default para pasivos
+                        newAccount.setPaymentDayOfMonth(null);
+                        newAccount.setOverdueAmount(Constants.INITIAL_BALANCE);
                     } else {
                         // Para productos ACTIVE (TC/Préstamos), estos campos no aplican
                         newAccount.freeTransactionLimit = null;
                         newAccount.transactionFeeAmount = null;
                         newAccount.currentMonthlyTransactions = null;
+                        // **INICIALIZACIÓN CRÍTICA DE RIESGO**
+                        // 1. Amount Used: Se inicializa a 0 si no vino en el request (o se usa el valor mapeado).
+                        newAccount.setAmountUsed((newAccount.getAmountUsed() != null) ? newAccount.getAmountUsed() : Constants.INITIAL_BALANCE);
+                        // 2. Payment Due Date: Se toma del Request (ya validamos que no sea nulo en el servicio).
+                        newAccount.setPaymentDayOfMonth(request.paymentDayOfMonth());
+                        // 3. Overdue Amount: La mora al crear la cuenta es SIEMPRE 0.
+                        newAccount.setOverdueAmount(Constants.INITIAL_BALANCE);
                     }
 
                     // LÓGICA DE ASIGNACIÓN VIP (Ahorro)
@@ -597,4 +652,13 @@ public class AccountServiceImpl implements AccountService {
         return Uni.createFrom().failure(new ServiceUnavailableException(errorMessage, failure));
     }
 
+    // El Fallback debe devolver el mismo tipo que el método principal (Uni<AccountResponse>)
+    public Uni<AccountResponse> fallbackCrearCuenta(AccountRequest request) {
+        log.error("FALLBACK ACTIVO: Fallo al intentar crear cuenta para cliente {}. (Timeout o Circuit Breaker)",
+                request.customerId());
+        // Se utiliza la excepción CreditEligibilityCheckFailedException para indicar la denegación por riesgo/FT
+        return Uni.createFrom().failure(new CreditEligibilityCheckFailedException(
+                "Fallo del sistema de adquisición. La solicitud de cuenta ha sido denegada temporalmente (FT/Timeout). Intente más tarde."
+        ));
+    }
 }

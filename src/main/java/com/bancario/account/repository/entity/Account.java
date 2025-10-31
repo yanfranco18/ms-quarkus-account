@@ -28,6 +28,9 @@ public class Account {
     public BigDecimal requiredDailyAverage; // <-- Requisito de Monitoreo VIP
     // CAMPO AÑADIDO: Monto de la comisión de mantenimiento (Cero para PYME)
     public BigDecimal maintenanceFeeAmount; // <-- Nuevo campo para el costo
+    // Se recomienda usar Integer si solo quieres guardar el día del mes.
+    private Integer paymentDayOfMonth;
+    public BigDecimal overdueAmount = BigDecimal.ZERO; // Monto principal que está vencido (0 al inicio)
     // --- NUEVOS CAMPOS DE TRANSACCIÓN ---
     public Integer freeTransactionLimit;
     public BigDecimal transactionFeeAmount;

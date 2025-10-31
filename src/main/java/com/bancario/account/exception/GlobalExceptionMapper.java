@@ -24,6 +24,11 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
                 status = Response.Status.NOT_FOUND.getStatusCode(); // 404
                 error = "Resource Not Found";
             }
+            case CreditEligibilityCheckFailedException eligibilityCheckFailedException -> {
+                // Nuevo mapeo: Indica una denegación por riesgo o Fall-Safe (Mora Vencida JIT)
+                status = Response.Status.FORBIDDEN.getStatusCode(); // 403
+                error = "Credit Eligibility Denied";
+            }
             case ServiceUnavailableException serviceUnavailableException -> {
                 // Excepción lanzada por el Fallback/Circuit Breaker
                 status = Response.Status.SERVICE_UNAVAILABLE.getStatusCode(); // 503

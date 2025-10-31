@@ -20,6 +20,10 @@ public record AccountResponse(
         BigDecimal balance, // Límite de crédito o saldo actual
         BigDecimal amountUsed, // Solo para productos ACTIVE (TC/Préstamos)
 
+        // --- NUEVOS CAMPOS DE RIESGO ---
+        Integer paymentDayOfMonth, // <-- AÑADIDO
+        BigDecimal overdueAmount, // <-- AÑADIDO
+
         // --- Configuración y Monitoreo ---
         BigDecimal maintenanceFeeAmount, // Costo de mantenimiento
         BigDecimal requiredDailyAverage, // Para monitoreo VIP

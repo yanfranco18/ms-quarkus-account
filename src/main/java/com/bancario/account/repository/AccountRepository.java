@@ -10,8 +10,11 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.bson.types.ObjectId;
 
+import java.util.List;
+
 @ApplicationScoped
 public class AccountRepository implements ReactivePanacheMongoRepository<Account> {
+
     /**
      * Verifica asíncronamente si el cliente tiene al menos una cuenta de crédito (tarjeta) activa.
      * Esta es una consulta personalizada que Panache ejecuta de forma reactiva.
@@ -71,5 +74,17 @@ public class AccountRepository implements ReactivePanacheMongoRepository<Account
         // Usamos el método Panache find para buscar por el campo 'accountNumber'
         return find("accountNumber", accountNumber)
                 .firstResult(); // Esperamos solo un resultado (o null si no existe)
+    }
+
+    /**
+     * Busca todas las cuentas de crédito (ACTIVE) de un cliente específico.
+     * Esta es la base para la validación JIT de deuda vencida en el servicio.
+     * @param customerId El ID del cliente.
+     * @return Uni<List<Account>> que emite una lista de cuentas activas.
+     */
+    public Uni<List<Account>> findActiveAccountsByCustomerId(String customerId) {
+        // La consulta busca todas las cuentas asociadas al cliente con tipo de producto ACTIVE.
+        return find("customerId = ?1 and productType = ?2", customerId, ProductType.ACTIVE)
+                .list();
     }
 }
